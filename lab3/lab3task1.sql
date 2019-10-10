@@ -41,25 +41,25 @@ DECLARE @Person TABLE (
 	);
 
 INSERT INTO @Person
-SELECT [person].[BusinessEntityID]
-	,[person].[PersonType]
-	,[person].[NameStyle]
-	,[person].[FirstName]
-	,[person].[MiddleName]
-	,[person].[LastName]
-	,[person].[Suffix]
-	,[person].[EmailPromotion]
-	,[person].[ModifiedDate]
-	,[person].[ID]
-	,[person].[FullName]
+SELECT per.[BusinessEntityID]
+	,per.[PersonType]
+	,per.[NameStyle]
+	,per.[FirstName]
+	,per.[MiddleName]
+	,per.[LastName]
+	,per.[Suffix]
+	,per.[EmailPromotion]
+	,per.[ModifiedDate]
+	,per.[ID]
+	,per.[FullName]
 	,CASE 
-		WHEN [emp].[Gender] = N'M'
+		WHEN emp.[Gender] = N'M'
 			THEN N'Mr.'
 		ELSE N'Ms.'
-		END AS [Title]
-FROM [dbo].[Person] [person]
-JOIN [HumanResources].[Employee] [emp]
-	ON [person].[BusinessEntityID] = [emp].[BusinessEntityID];
+		END AS Title
+FROM [dbo].[Person] per
+JOIN [HumanResources].[Employee] emp
+	ON per.[BusinessEntityID] = emp.[BusinessEntityID];
 
 --SELECT * FROM @Person;
 --SELECT * FROM [HumanResources].[Employee];
@@ -69,10 +69,10 @@ JOIN [HumanResources].[Employee] [emp]
 -- из полей Title, FirstName, LastName 
 -- (например ‘Mr. Jossef Goldberg’);
 UPDATE [dbo].[Person]
-SET [dbo].[Person].[FullName] = [variable].[Title] + ' ' + [variable].[FirstName] + ' ' + [variable].[LastName]
-FROM [dbo].[Person] [table]
-INNER JOIN @Person [variable]
-	ON [table].[ID] = [variable].[ID];
+SET [dbo].[Person].[FullName] = variable.[Title] + ' ' + variable.[FirstName] + ' ' + variable.[LastName]
+FROM [dbo].[Person] tbl
+INNER JOIN @Person variable
+	ON tbl.[ID] = variable.[ID];
 
 --SELECT * FROM @Person;
 --SELECT * FROM [dbo].[Person];
