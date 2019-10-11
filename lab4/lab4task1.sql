@@ -24,7 +24,7 @@ GO
 -- Триггер должен заполнять таблицу Production.ProductCategoryHst 
 -- с указанием типа операции в поле Action 
 -- в зависимости от оператора, вызвавшего триггер.
-DROP TRIGGER [Production].[TRG_ProductCategoryHst];
+DROP TRIGGER IF EXISTS [Production].[TRG_ProductCategoryHst];
 GO
 
 CREATE TRIGGER [TRG_ProductCategoryHst] ON [Production].[ProductCategory]
