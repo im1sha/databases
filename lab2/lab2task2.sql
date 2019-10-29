@@ -26,10 +26,18 @@ CREATE TABLE [dbo].[Person] (
 -- имеет свойство identity.
 -- Начальное значение для поля identity задайте 10 и 
 -- приращение задайте 10;
+--ALTER TABLE [dbo].[Person] ADD [ID] BIGINT IDENTITY (
+--	10
+--	,10
+--	) PRIMARY KEY;
+
 ALTER TABLE [dbo].[Person] ADD [ID] BIGINT IDENTITY (
 	10
 	,10
-	) PRIMARY KEY;
+	);
+
+ALTER TABLE [dbo].[Person] 
+   ADD CONSTRAINT [PK_PersonId] PRIMARY KEY ([ID]);
 
 -------------------------------------------------
 -- c) используя инструкцию ALTER TABLE, 

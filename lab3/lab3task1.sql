@@ -56,10 +56,10 @@ SELECT per.[BusinessEntityID]
 		WHEN emp.[Gender] = N'M'
 			THEN N'Mr.'
 		ELSE N'Ms.'
-		END AS Title
+		END AS [Title]
 FROM [dbo].[Person] per
 JOIN [HumanResources].[Employee] emp
-	ON per.[BusinessEntityID] = emp.[BusinessEntityID];
+	ON per.[BusinessEntityID] = emp.[BusinessEntityID]
 
 --SELECT * FROM @Person;
 --SELECT * FROM [HumanResources].[Employee];
@@ -72,8 +72,9 @@ UPDATE [dbo].[Person]
 SET [dbo].[Person].[FullName] = variable.[Title] + ' ' + variable.[FirstName] + ' ' + variable.[LastName]
 FROM [dbo].[Person] tbl
 INNER JOIN @Person variable
-	ON tbl.[ID] = variable.[ID];
+	ON tbl.[ID] = variable.[ID]
 
+GO
 --SELECT * FROM @Person;
 --SELECT * FROM [dbo].[Person];
 --------------------------------------------------
@@ -85,7 +86,8 @@ FROM [dbo].[Person];
 
 DELETE
 FROM [dbo].[Person]
-WHERE LEN([FullName]) > 20;
+WHERE LEN([FullName]) > 20
+GO
 
 SELECT COUNT(*)
 FROM [dbo].[Person];
@@ -94,31 +96,17 @@ FROM [dbo].[Person];
 -- e) удалите все созданные ограничения 
 -- и значения по умолчанию. После этого, удалите поле ID.
 -- Имена ограничений вы можете найти в метаданных. Например:
-DECLARE @Command NVARCHAR(MAX) = N'';
-
-SELECT @Command += N'ALTER TABLE [dbo].[Person]
-	DROP CONSTRAINT ' + QUOTENAME([CONSTRAINT_NAME]) + N';'
-FROM [INFORMATION_SCHEMA].[CONSTRAINT_TABLE_USAGE]
-WHERE [TABLE_SCHEMA] = N'dbo'
-	AND [TABLE_NAME] = N'Person';
-
-SELECT @Command += CHAR(13) + CHAR(10) + N'ALTER TABLE [dbo].[Person]
-	DROP CONSTRAINT ' + d.[name] + N';'
-FROM [sys].[tables] t
-JOIN [sys].[schemas] s
-	ON t.[schema_id] = s.[schema_id]
-JOIN [sys].[default_constraints] d
-	ON t.[object_id] = d.[parent_object_id]
-WHERE s.[name] = N'dbo'
-	AND t.[name] = N'Person';
-
-PRINT @Command;
-
-EXECUTE (@Command);
+ALTER TABLE
+    [dbo].[Person]
+DROP CONSTRAINT
+    [PK_PersonId]
+    ,[CK_Title]
+    ,[DF_Suffix]
+GO
 
 ALTER TABLE [dbo].[Person]
-
-DROP COLUMN [ID];
+DROP COLUMN [ID]
+GO
 
 --------------------------------------------------
 -- f) удалите таблицу dbo.Person.
