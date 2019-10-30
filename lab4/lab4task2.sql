@@ -8,15 +8,17 @@ DROP VIEW IF EXISTS [Production].[vCategory];
 GO
 
 CREATE VIEW [Production].[vCategory]
-WITH ENCRYPTION, SCHEMABINDING AS
+WITH 
+	ENCRYPTION, 
+	SCHEMABINDING AS
 SELECT 
     ct.[ProductCategoryID] AS [ProductCategoryID]
 	, ct.[Name] AS [CategoryName]
 	, subct.[ProductSubcategoryID] AS [ProductSubcategoryID]
 	, subct.[Name] AS [SubcategoryName]
 FROM [Production].[ProductCategory] AS ct
-JOIN [Production].[ProductSubcategory] AS subct
-    ON (ct.[ProductCategoryID] = subct.[ProductSubcategoryID])
+INNER JOIN [Production].[ProductSubcategory] AS subct
+    ON (ct.[ProductCategoryID] = subct.[ProductCategoryID])
 GO
 
 CREATE UNIQUE CLUSTERED INDEX IX_vCategory
@@ -37,20 +39,22 @@ INSTEAD OF UPDATE
 AS
 IF EXISTS(SELECT 1 FROM INSERTED) AND EXISTS (SELECT 1 FROM DELETED)
 BEGIN
-	PRINT 'UPDATE CALLED'
 	DECLARE @date DATETIME = GETDATE();
 
     UPDATE [Production].[ProductSubcategory]
     SET 
     [Name] = ins.[SubcategoryName],
-    ModifiedDate = @date
-    FROM INSERTED ins
+    [ModifiedDate] = @date
+    FROM INSERTED AS ins, DELETED AS del
+    WHERE ([Production].[ProductSubcategory].ProductSubcategoryID = del.ProductSubcategoryID) 
+		AND ([Production].[ProductSubcategory].ProductCategoryID = del.ProductCategoryID);
 	
-	UPDATE [Production].[ProductCategory]
+    UPDATE [Production].[ProductCategory]
     SET 
     [Name] = ins.[CategoryName],
-    ModifiedDate = @date
-    FROM INSERTED ins
+    [ModifiedDate] = @date
+    FROM INSERTED ins, DELETED del
+	WHERE ([Production].[ProductCategory].ProductCategoryID = del.ProductCategoryID)
 END
  
 DROP TRIGGER IF EXISTS [Production].[TRG_vCategoryDelete];
@@ -62,11 +66,10 @@ INSTEAD OF DELETE
 AS
 IF NOT EXISTS(SELECT 1 FROM INSERTED) AND EXISTS (SELECT 1 FROM DELETED)
 BEGIN
-    DELETE FROM [Production].[ProductSubcategory]
-	WHERE [ProductSubcategoryID] IN (SELECT [ProductSubcategoryID] FROM DELETED)
-
-	DELETE FROM [Production].[ProductCategory]
-	WHERE [ProductCategoryID] IN (SELECT [ProductCategoryID] FROM DELETED)
+    DELETE FROM [Production].[ProductSubcategory] 
+    FROM [Production].[ProductSubcategory] sb
+    JOIN DELETED del
+    ON sb.ProductSubcategoryID = del.ProductSubcategoryID
 END
 
 DROP TRIGGER IF EXISTS [Production].[TRG_vCategoryInsert];
@@ -98,8 +101,12 @@ GO
 -- Обновите вставленные строки через представление. 
 -- Удалите строки.
 
-DECLARE @cat NVARCHAR(50) = CONVERT(NVARCHAR(50), SYSDATETIME());
-DECLARE @subc NVARCHAR(50) = CONVERT(NVARCHAR(50), SYSDATETIME());
+
+
+DECLARE @cat NVARCHAR(50) =  N'qwerty1';
+DECLARE @subc NVARCHAR(50) =  N'qwerty2';
+DECLARE @newCat NVARCHAR(50) =  N'string1';
+DECLARE @newSubc NVARCHAR(50) =  N'string2';
 
 INSERT INTO [Production].[vCategory]( 
     [CategoryName]
@@ -114,17 +121,19 @@ SELECT * FROM [Production].[ProductCategory]
 SELECT * FROM [Production].[ProductSubcategory]
 
 UPDATE [Production].[vCategory]
-SET [CategoryName] = N'1',
-	[SubcategoryName] = N'2'
+SET [SubcategoryName] = @newSubc, [CategoryName] = @newCat
 WHERE [CategoryName] = @cat AND [SubcategoryName] = @subc
 
 
 SELECT * FROM [Production].[ProductCategory] 
 SELECT * FROM [Production].[ProductSubcategory]
 
-DELETE FROM [Production].[ProductSubcategory]  WHERE [ProductSubcategoryID] > 37 
-DELETE FROM [Production].[ProductCategory]  WHERE [ProductCategoryID] > 4 
 
+DELETE FROM [Production].[vCategory] WHERE 
+	 (CategoryName = @newCat)
+	 AND (SubcategoryName = @newSubc)
+
+GO
 SELECT * FROM [Production].[ProductCategory] 
 SELECT * FROM [Production].[ProductSubcategory]
 
