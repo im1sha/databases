@@ -15,7 +15,7 @@ AS
 BEGIN
 	 DECLARE @query AS NVARCHAR(500)
 
-	 SET @query =  'SELECT Name
+	 SET @query =  'SELECT [Name]
 							,' + @Years + '
 					FROM (
 							SELECT [Name]
@@ -27,11 +27,11 @@ BEGIN
 							JOIN [Production].[Product]
 	 							ON [Product].[ProductID] = [SalesOrderDetail].[ProductID]
 							) AS selected
-					PIVOT(SUM(OrderQty) FOR y IN (' + @Years + ')) AS pvt'
+					PIVOT(SUM([OrderQty]) FOR y IN (' + @Years + ')) AS pvt'
 
 	 EXEC (@query)
 END
 GO
 
-EXECUTE [dbo].[pOrdersByYearList] '"2005", "2006"'
+EXECUTE [dbo].[pOrdersByYearList] '[2008], [2007], [2006]'
 GO
