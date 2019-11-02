@@ -9,13 +9,14 @@
 -- SourceID — первичный ключ исходной таблицы; 
 -- UserName — имя пользователя, совершившего операцию. 
 -- Создайте другие поля, если считаете их нужными.
+
 IF OBJECT_ID('[Production].[ProductCategoryHst]', 'U') IS NULL
 	CREATE TABLE [Production].[ProductCategoryHst] (
 		 [ID] INT IDENTITY(1, 1) PRIMARY KEY
 		 ,[Action] NVARCHAR(10) NOT NULL
 		 ,[ModifiedDate] DATETIME NOT NULL
 		 ,[SourceID] NVARCHAR(10) NOT NULL
-		 ,[UserName] NVARCHAR(120) NOT NULL
+		 ,[UserName] NVARCHAR(120) NOT NULL DEFAULT SYSTEM_USER
 		 );
 GO
 
@@ -49,12 +50,10 @@ BEGIN
 	 	 [Action]
 	 	 ,[ModifiedDate]
 	 	 ,[SourceID]
-	 	 ,[UserName]
 	 	 )
 	 SELECT 'UPDATE'
 	 	 ,GETDATE()
 	 	 ,ProductCategoryID
-	 	 ,SYSTEM_USER
 	 FROM DELETED
 END
 ELSE IF (
@@ -68,12 +67,10 @@ BEGIN
 	 	 [Action]
 	 	 ,[ModifiedDate]
 	 	 ,[SourceID]
-	 	 ,[UserName]
 	 	 )
 	 SELECT 'INSERT'
 	 	 ,GETDATE()
 	 	 ,ProductCategoryID
-	 	 ,SYSTEM_USER
 	 FROM INSERTED
 END
 ELSE IF (
@@ -87,12 +84,10 @@ BEGIN
 	 	 [Action]
 	 	 ,[ModifiedDate]
 	 	 ,[SourceID]
-	 	 ,[UserName]
 	 	 )
 	 SELECT 'DELETE'
 	 	 ,GETDATE()
 	 	 ,ProductCategoryID
-	 	 ,SYSTEM_USER
 	 FROM DELETED
 END;
 GO

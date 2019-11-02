@@ -10,7 +10,11 @@ ALTER TABLE [dbo].[Person] ADD [SalesYTD] MONEY NULL
 	 ,[SalesLastYear] MONEY NULL
 	 ,[OrdersNum] INT NULL
 	 ,[SalesDiff] AS ([SalesYTD] - [SalesLastYear]);
+GO
 
+CREATE NONCLUSTERED INDEX [IX_SalesDiff]
+ON [dbo].[Person] ([SalesDiff])
+GO
 ------------------------------------------------------------------
 -- b) 
 -- создайте временную таблицу #Person, 
