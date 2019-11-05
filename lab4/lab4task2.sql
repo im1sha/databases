@@ -97,89 +97,43 @@ CREATE TRIGGER [Production].[TRG_vCategoryInsert] ON [Production].[vCategory]
 INSTEAD OF INSERT
 AS
 BEGIN
-	DECLARE @date DATETIME = GETDATE()
-	DECLARE @ctName NVARCHAR(50)
-	DECLARE @subctName NVARCHAR(50)
+    DECLARE @date DATETIME = GETDATE()
 
-	SELECT @ctName = [CategoryName]
-		 ,@subctName = [SubcategoryName]
+	INSERT INTO [Production].[ProductCategory] (
+		 [Name]
+		 ,[ModifiedDate]
+		 ,[rowguid]
+		 )
+	SELECT [CategoryName]
+		 ,@date
+		 ,NEWID()
+	FROM INSERTED ins
+	WHERE ins.[CategoryName] NOT IN (
+	 		 SELECT [Name]
+	 		 FROM [Production].[ProductCategory]
+	 		 )
+	GROUP BY [CategoryName]
+
+	--
+	INSERT INTO [Production].[ProductSubcategory] (
+		 [ProductCategoryID]
+		 ,[Name]
+		 ,[ModifiedDate]
+		 ,[rowguid]
+		 )
+	SELECT (
+	 		 SELECT TOP 1 [ProductCategoryID]
+	 		 FROM [ProductCategory]
+	 		 WHERE [ProductCategoryID] = (
+	 	 	 		 SELECT TOP 1 [ProductCategoryID]
+	 	 	 		 FROM [Production].[ProductCategory] ct
+	 	 	 		 WHERE ct.[Name] = INSERTED.[CategoryName]
+	 	 	 		 )
+	 		 )
+		 ,[SubcategoryName]
+		 ,@date
+		 ,NEWID()
 	FROM INSERTED
-
-	IF EXISTS (
-	 		 SELECT 1
-	 		 FROM [Production].[ProductCategory] AS p1
-	 		 WHERE @ctName = p1.[Name]
-	 		 )
-		 AND EXISTS (
-	 		 SELECT 1
-	 		 FROM [Production].[ProductSubcategory] AS p2
-	 		 WHERE @subctName = p2.[Name]
-	 		 )
-	BEGIN
-		 RAISERROR (
-	 	 		 50000
-	 	 		 ,- 1
-	 	 		 ,- 1
-	 	 		 ,'[ProductCategory] AND [ProductSubcategory] ALREADY EXIST'
-	 	 		 )
-	END
-	ELSE IF EXISTS (
-	 		 SELECT 1
-	 		 FROM [Production].[ProductCategory] AS p1
-	 		 WHERE @ctName = p1.[Name]
-	 		 )
-		 AND NOT EXISTS (
-	 		 SELECT 1
-	 		 FROM [Production].[ProductSubcategory] AS p2
-	 		 WHERE @subctName = p2.[Name]
-	 		 )
-	BEGIN
-		 DECLARE @id INT
-
-		 SELECT @id = p1.ProductCategoryID
-		 FROM [Production].[ProductCategory] AS p1
-		 WHERE @ctName = p1.[Name]
-
-		 INSERT INTO [Production].[ProductSubcategory] (
-	 		 [ProductCategoryID]
-	 		 ,[Name]
-	 		 ,[ModifiedDate]
-	 		 ,[rowguid]
-	 		 )
-		 SELECT @id
-	 		 ,[SubcategoryName]
-	 		 ,@date
-	 		 ,NEWID()
-		 FROM INSERTED
-	END
-	ELSE IF NOT EXISTS (
-	 		 SELECT 1
-	 		 FROM [Production].[ProductCategory] AS p1
-	 		 WHERE @ctName = p1.[Name]
-	 		 )
-	BEGIN
-		 INSERT INTO [Production].[ProductCategory] (
-	 		 [Name]
-	 		 ,[ModifiedDate]
-	 		 ,[rowguid]
-	 		 )
-		 SELECT [CategoryName]
-	 		 ,@date
-	 		 ,NEWID()
-		 FROM INSERTED
-
-		 INSERT INTO [Production].[ProductSubcategory] (
-	 		 [ProductCategoryID]
-	 		 ,[Name]
-	 		 ,[ModifiedDate]
-	 		 ,[rowguid]
-	 		 )
-		 SELECT SCOPE_IDENTITY()
-	 		 ,[SubcategoryName]
-	 		 ,@date
-	 		 ,NEWID()
-		 FROM INSERTED
-	END
 END
 GO
 
@@ -198,9 +152,25 @@ INSERT INTO [Production].[vCategory] (
 	 [CategoryName]
 	 ,[SubcategoryName]
 	 )
-VALUES (
-	 @cat
+VALUES
+	 (@cat
 	 ,@subc
+	 )	 
+	 ,
+	 (@cat
+	 ,@newSubc
+	 )
+	 ,
+	 (@subc
+	 ,@cat
+	 )	 
+	 ,
+	 (@cat
+	 ,@newCat
+	 )	 
+	 ,
+	 (N'Components'
+	 ,N'Brakes22'
 	 )
 
 SELECT *
@@ -209,24 +179,24 @@ FROM [Production].[ProductCategory]
 SELECT *
 FROM [Production].[ProductSubcategory]
 
-UPDATE [Production].[vCategory]
-SET [SubcategoryName] = @newSubc
-	 ,[CategoryName] = @newCat
-WHERE [CategoryName] = @cat
-	 AND [SubcategoryName] = @subc
+--UPDATE [Production].[vCategory]
+--SET [SubcategoryName] = @newSubc
+--	 ,[CategoryName] = @newCat
+--WHERE [CategoryName] = @cat
+--	 AND [SubcategoryName] = @subc
 
-SELECT *
-FROM [Production].[ProductCategory]
+--SELECT *
+--FROM [Production].[ProductCategory]
 
-SELECT *
-FROM [Production].[ProductSubcategory]
+--SELECT *
+--FROM [Production].[ProductSubcategory]
 
-DELETE [Production].[vCategory]
-WHERE ([SubcategoryName] = @newSubc)
-GO
+--DELETE [Production].[vCategory]
+--WHERE ([SubcategoryName] = @newSubc)
+--GO
 
-SELECT *
-FROM [Production].[ProductCategory]
+--SELECT *
+--FROM [Production].[ProductCategory]
 
-SELECT *
-FROM [Production].[ProductSubcategory]
+--SELECT *
+--FROM [Production].[ProductSubcategory]
