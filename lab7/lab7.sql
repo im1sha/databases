@@ -1,15 +1,14 @@
-IF OBJECT_ID('tempdb..#Employees') IS NOT NULL
-BEGIN
-	 DROP TABLE #Employees
-END
+DROP TABLE 
+IF EXISTS #Employees
 GO
+
 -- Вывести значения полей [BusinessEntityID], [NationalIDNumber] 
 -- и [JobTitle] из таблицы [HumanResources].[Employee] 
 -- в виде xml, сохраненного в переменную. 
 DECLARE @xmlVar XML;
 
 SET @xmlVar = (
-	 	 SELECT [BusinessEntityID] AS '@ID'
+	 	 SELECT [BusinessEntityID] AS 'BusinessEntityID'
 	 	 	 ,[NationalIDNumber] AS 'NationalIDNumber'
 	 	 	 ,[JobTitle] AS 'JobTitle'
 	 	 FROM [HumanResources].[Employee]
@@ -19,8 +18,9 @@ SET @xmlVar = (
 
 SELECT @xmlVar
 
--- Создать временную таблицу и заполнить её данными из переменной, 
--- содержащей xml.
+-- Создать временную таблицу и заполнить её данными
+-- из переменной, содержащей xml.
+
 CREATE TABLE #Employees (
 	 [BusinessEntityID] INT NOT NULL
 	 ,[NationalIDNumber] NVARCHAR(15) NOT NULL
@@ -32,7 +32,7 @@ INSERT INTO #Employees (
 	 ,[NationalIDNumber]
 	 ,[JobTitle]
 	 )
-SELECT [BusinessEntityID] = node.value('@ID', 'INT')
+SELECT [BusinessEntityID] = node.value('BusinessEntityID[1]', 'INT')
 	 ,[NationalIDNumber] = node.value('NationalIDNumber[1]', 'NVARCHAR(15)')
 	 ,[JobTitle] = node.value('JobTitle[1]', 'NVARCHAR(50)')
 FROM @xmlVar.nodes('/Employees/Employee') AS XML(node)
